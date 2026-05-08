@@ -4,3 +4,4 @@ actual-data/
 *.log
 .claude/
 kids.json
+docker-compose.yml
