@@ -1,0 +1,20 @@
+{
+  "name": "kids-allowance",
+  "version": "1.0.0",
+  "description": "Kids allowance tracker backed by Actual Budget",
+  "main": "server.js",
+  "engines": {
+    "node": ">=20 <25"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "/opt/homebrew/opt/node@22/bin/node --watch server.js"
+  },
+  "dependencies": {
+    "@actual-app/api": "^26.4.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.0",
+    "node-cron": "^3.0.0"
+  }
+}

@@ -1,0 +1,593 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+
+  .app { max-width: 680px; padding: 1rem 0; }
+
+.kid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+  .kid-card {
+    background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg); padding: 1rem; cursor: pointer; transition: all 0.15s;
+    position: relative; overflow: hidden;
+  }
+  .kid-card:hover { border-color: var(--color-border-secondary); }
+  .kid-card.selected { border: 2px solid #534AB7; }
+  .kid-card .avatar {
+    width: 44px; height: 44px; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-weight: 500; font-size: 16px; margin-bottom: 10px;
+  }
+  .kid-card .kid-name { font-size: 15px; font-weight: 500; color: var(--color-text-primary); }
+  .kid-card .kid-balance { font-size: 24px; font-weight: 500; color: var(--color-text-primary); margin: 4px 0; }
+  .kid-card .kid-meta { font-size: 12px; color: var(--color-text-secondary); }
+  .paused-badge {
+    position: absolute; top: 10px; right: 10px;
+    background: #FAEEDA; color: #854F0B; font-size: 11px; font-weight: 500;
+    padding: 2px 8px; border-radius: 999px;
+  }
+  .active-badge {
+    position: absolute; top: 10px; right: 10px;
+    background: #EAF3DE; color: #3B6D11; font-size: 11px; font-weight: 500;
+    padding: 2px 8px; border-radius: 999px;
+  }
+
+  .add-kid-card {
+    background: var(--color-background-primary);
+    border: 1.5px dashed var(--color-border-secondary);
+    border-radius: var(--border-radius-lg); padding: 1rem; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    color: var(--color-text-secondary); font-size: 13px; font-weight: 500;
+    transition: all 0.15s; min-height: 120px;
+  }
+  .add-kid-card:hover { border-color: #534AB7; color: #534AB7; }
+
+  .color-swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; transition: border 0.1s; }
+
+  .panel-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+  .metric-card {
+    background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 1rem;
+  }
+  .metric-label { font-size: 12px; color: var(--color-text-secondary); margin-bottom: 4px; }
+  .metric-value { font-size: 22px; font-weight: 500; color: var(--color-text-primary); }
+
+  .card {
+    background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary);
+    border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; margin-bottom: 12px;
+  }
+  .card-title { font-size: 14px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+
+  .form-row { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; }
+  .form-row label { font-size: 13px; color: var(--color-text-secondary); min-width: 90px; }
+  .form-row input, .form-row select {
+    flex: 1; min-width: 120px; font-size: 13px; padding: 6px 10px;
+    border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md);
+    background: var(--color-background-primary); color: var(--color-text-primary);
+  }
+  .form-row input:focus, .form-row select:focus { outline: none; border-color: #534AB7; }
+
+  .btn {
+    padding: 7px 16px; border-radius: var(--border-radius-md); font-size: 13px; font-weight: 500;
+    border: 0.5px solid var(--color-border-secondary); background: var(--color-background-primary);
+    color: var(--color-text-primary); cursor: pointer; transition: all 0.12s;
+  }
+  .btn:hover { background: var(--color-background-secondary); }
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .btn-primary { background: #3C3489; color: #EEEDFE; border-color: #3C3489; }
+  .btn-primary:hover { background: #26215C; }
+  .btn-danger { background: #FCEBEB; color: #A32D2D; border-color: #F0959560; }
+  .btn-danger:hover { background: #F7C1C1; }
+  .btn-warn { background: #FAEEDA; color: #854F0B; border-color: #FAC77560; }
+  .btn-warn:hover { background: #FAC775; }
+  .btn-success { background: #EAF3DE; color: #3B6D11; border-color: #97C45960; }
+  .btn-success:hover { background: #C0DD97; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+  .chore-list { display: flex; flex-direction: column; gap: 8px; }
+  .chore-item {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+    background: var(--color-background-secondary); border-radius: var(--border-radius-md); font-size: 13px;
+  }
+  .chore-name { flex: 1; color: var(--color-text-primary); }
+  .chore-amount { font-weight: 500; color: #3B6D11; min-width: 44px; text-align: right; }
+  .chore-check { width: 16px; height: 16px; cursor: pointer; accent-color: #534AB7; }
+
+  .history-list { display: flex; flex-direction: column; gap: 6px; }
+  .tx-item {
+    display: flex; align-items: center; gap: 10px; padding: 8px 10px;
+    border-bottom: 0.5px solid var(--color-border-tertiary); font-size: 13px;
+  }
+  .tx-item:last-child { border-bottom: none; }
+  .tx-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .tx-desc { flex: 1; color: var(--color-text-primary); }
+  .tx-date { font-size: 11px; color: var(--color-text-tertiary); }
+  .tx-amt { font-weight: 500; min-width: 52px; text-align: right; }
+  .tx-amt.pos { color: #3B6D11; }
+  .tx-amt.neg { color: #A32D2D; }
+  .tx-upcoming { color: var(--color-text-tertiary); font-style: italic; }
+
+  .upcoming-badge {
+    font-size: 11px; padding: 2px 7px; border-radius: 999px;
+    background: #E6F1FB; color: #185FA5; margin-left: 4px;
+  }
+
+  .controls-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+  .pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 500; }
+  .pill-green { background: #EAF3DE; color: #3B6D11; }
+  .pill-amber { background: #FAEEDA; color: #854F0B; }
+  .pill-blue { background: #E6F1FB; color: #185FA5; }
+
+  .empty-state { text-align: center; padding: 2rem; color: var(--color-text-tertiary); font-size: 13px; }
+
+  .separator { height: 0.5px; background: var(--color-border-tertiary); margin: 12px 0; }
+
+  .api-status { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--color-text-secondary); padding: 6px 10px; background: var(--color-background-secondary); border-radius: var(--border-radius-md); margin-bottom: 1rem; }
+  .api-dot { width: 7px; height: 7px; border-radius: 50%; background: #aaa; flex-shrink: 0; }
+  .api-status-text { flex: 1; }
+
+  .toast {
+    position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%) translateY(60px);
+    background: #26215C; color: #EEEDFE; padding: 9px 20px; border-radius: 999px;
+    font-size: 13px; font-weight: 500; transition: transform 0.25s; pointer-events: none; z-index: 999;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+</style>
+
+<div class="app">
+  <h2 class="sr-only">Kids allowance manager</h2>
+
+  <div class="api-status">
+    <div class="api-dot" id="apiDot"></div>
+    <span class="api-status-text" id="apiStatusText">Connecting to Actual Budget…</span>
+    <button class="btn btn-sm" onclick="triggerAllowances()" title="Process today's allowances now" style="margin-left:auto">Process allowances</button>
+  </div>
+
+  <div class="kid-cards" id="kidCards">
+    <div class="add-kid-card" onclick="showAddKid()"><span style="font-size:18px;font-weight:300">+</span> Add kid</div>
+  </div>
+  <div id="parentDetail"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API_BASE = 'http://localhost:3000';
+
+const state = {
+  selectedKid: 0,
+  kids: [],
+};
+
+// ─── API ──────────────────────────────────────────────────────────────────────
+
+async function callApi(path, method = 'GET', body = null) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body != null) opts.body = JSON.stringify(body);
+  try {
+    const res = await fetch(API_BASE + path, opts);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || res.statusText);
+    return data;
+  } catch (err) {
+    if (err instanceof TypeError) throw new Error('Server unreachable at ' + API_BASE + '. Is it running?');
+    throw err;
+  }
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+
+async function initApp() {
+  try {
+    const status = await callApi('/api/status');
+    setApiStatus(status.connected, status.error);
+  } catch (err) {
+    setApiStatus(false, err.message);
+  }
+  await refreshKids();
+}
+
+function setApiStatus(connected, message) {
+  document.getElementById('apiDot').style.background = connected ? '#639922' : '#E24B4A';
+  document.getElementById('apiStatusText').textContent = connected
+    ? 'Actual Budget connected'
+    : (message || 'Not connected — check .env and run npm start');
+}
+
+async function refreshKids() {
+  try {
+    const kids = await callApi('/api/kids');
+    state.kids = kids;
+    if (state.selectedKid >= kids.length) state.selectedKid = Math.max(0, kids.length - 1);
+    renderKidCards();
+    if (kids.length > 0) {
+      await loadAndRenderDetail(state.selectedKid);
+    } else {
+      document.getElementById('parentDetail').innerHTML = '';
+    }
+  } catch (err) {
+    showToast('Error: ' + err.message);
+    setApiStatus(false, err.message);
+  }
+}
+
+async function triggerAllowances() {
+  try {
+    const { paid } = await callApi('/api/process-allowances', 'POST');
+    showToast(paid > 0 ? `Paid allowance to ${paid} kid(s)` : 'No allowances due today');
+    if (paid > 0) await refreshKids();
+  } catch (err) {
+    showToast('Error: ' + err.message);
+  }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function txDot(t) {
+  return { allowance: '#639922', chore: '#3B6D11', deduct: '#E24B4A', pause: '#EF9F27', bonus: '#185FA5', actual: '#888780' }[t] || '#888780';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ─── Kid cards ────────────────────────────────────────────────────────────────
+
+function renderKidCards() {
+  const cards = state.kids.map((k, i) => `
+    <div class="kid-card${state.selectedKid === i ? ' selected' : ''}" onclick="selectKid(${i})">
+      ${k.paused ? '<span class="paused-badge">Paused</span>' : '<span class="active-badge">Active</span>'}
+      <div class="avatar" style="background:${k.bg};color:${k.color}">${k.avatar}</div>
+      <div class="kid-name">${k.name}</div>
+      <div class="kid-balance">$${k.balance.toFixed(2)}</div>
+      <div class="kid-meta">$${k.weeklyAllowance.toFixed(2)}/wk &nbsp;·&nbsp; ${k.chores.filter(c => !c.done).length} chores pending</div>
+    </div>
+  `).join('');
+
+  document.getElementById('kidCards').innerHTML = cards + `
+    <div class="add-kid-card" onclick="showAddKid()">
+      <span style="font-size:18px;font-weight:300">+</span> Add kid
+    </div>
+  `;
+}
+
+async function selectKid(i) {
+  state.selectedKid = i;
+  renderKidCards();
+  await loadAndRenderDetail(i);
+}
+
+// ─── Parent detail ────────────────────────────────────────────────────────────
+
+async function loadAndRenderDetail(ki) {
+  const k = state.kids[ki];
+  if (!k) return;
+  document.getElementById('parentDetail').innerHTML =
+    '<div style="padding:1rem;color:var(--color-text-tertiary);font-size:13px">Loading…</div>';
+  let history = [], upcoming = k.upcoming || [], categories = [];
+  try {
+    const [histData, cats] = await Promise.all([
+      callApi(`/api/kids/${k.id}/history`),
+      callApi('/api/categories'),
+    ]);
+    history = histData.history;
+    upcoming = histData.upcoming;
+    categories = cats;
+  } catch {}
+  renderParentDetail(ki, history, upcoming, categories);
+}
+
+function renderParentDetail(ki, history, upcoming, categories = []) {
+  const k = state.kids[ki];
+  if (!k) return;
+  const pending = k.chores.filter(c => !c.done);
+
+  document.getElementById('parentDetail').innerHTML = `
+    <div class="panel-grid">
+      <div class="metric-card">
+        <div class="metric-label">Weekly allowance</div>
+        <div class="metric-value">$${k.weeklyAllowance.toFixed(2)}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Pending chores</div>
+        <div class="metric-value">${pending.length}</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-label">Chore earnings (avail)</div>
+        <div class="metric-value">$${pending.reduce((s, c) => s + c.amount, 0).toFixed(2)}</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">
+        Weekly allowance
+        <span class="pill ${k.paused ? 'pill-amber' : 'pill-green'}">${k.paused ? 'Paused' : 'Active'}</span>
+      </div>
+      <div class="form-row">
+        <label>Amount</label>
+        <input type="number" id="weeklyAmt" value="${k.weeklyAllowance.toFixed(2)}" min="0" step="0.25" style="max-width:90px">
+        <label style="min-width:auto">each</label>
+        <select id="weeklyDay">
+          ${['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(d => `<option${d === k.weeklyDay ? ' selected' : ''}>${d}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Source</label>
+        <select id="allowanceSource" style="flex:2">
+          <option value="">No source category</option>
+          ${categories.map(c => `<option value="${c.id}" data-name="${c.name}"${c.id === k.allowanceSourceCategoryId ? ' selected' : ''}>${c.name}${c.group ? ` (${c.group})` : ''}</option>`).join('')}
+        </select>
+      </div>
+      <div class="controls-row">
+        <button class="btn btn-primary btn-sm" onclick="saveAllowance(${ki})">Save schedule</button>
+        ${k.paused
+          ? `<button class="btn btn-success btn-sm" onclick="resumeAllowance(${ki})">Resume allowance</button>`
+          : `<button class="btn btn-warn btn-sm" onclick="pauseAllowance(${ki})">Pause allowance</button>`
+        }
+        <button class="btn btn-danger btn-sm" style="margin-left:auto" onclick="deleteKid('${k.id}')">Remove kid</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Chores & earnings</div>
+      <div class="chore-list">
+        ${k.chores.map(c => `
+          <div class="chore-item">
+            <input type="checkbox" class="chore-check" ${c.done ? 'checked' : ''} onchange="toggleChore(${ki},'${c.id}',this.checked)">
+            <div style="flex:1;min-width:0">
+              <span class="chore-name" style="${c.done ? 'text-decoration:line-through;color:var(--color-text-tertiary)' : ''}">${c.name}</span>
+              ${c.sourceCategoryName ? `<div style="font-size:11px;color:var(--color-text-tertiary)">from ${c.sourceCategoryName}</div>` : ''}
+            </div>
+            <span class="chore-amount">+$${c.amount.toFixed(2)}</span>
+            <button class="btn btn-danger btn-sm" onclick="removeChore(${ki},'${c.id}')">Remove</button>
+          </div>
+        `).join('')}
+      </div>
+      <div class="separator"></div>
+      <div class="form-row">
+        <input type="text" id="choreName" placeholder="Chore name" style="flex:2">
+        <input type="number" id="choreAmt" placeholder="$" min="0" step="0.25" style="max-width:72px">
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <label style="min-width:auto">Source</label>
+        <select id="choreSource" style="flex:2">
+          <option value="">No source category</option>
+          ${categories.map(c => `<option value="${c.id}" data-name="${c.name}">${c.name}${c.group ? ` (${c.group})` : ''}</option>`).join('')}
+        </select>
+        <button class="btn btn-primary btn-sm" onclick="addChore(${ki})">Add chore</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Manual adjustment</div>
+      <div class="form-row">
+        <label>Amount</label>
+        <input type="number" id="adjAmt" placeholder="$0.00" min="0" step="0.25" style="max-width:100px">
+        <label style="min-width:auto">Reason</label>
+        <input type="text" id="adjReason" placeholder="e.g. Bonus for helping" style="flex:2">
+      </div>
+      <div class="controls-row">
+        <button class="btn btn-success btn-sm" onclick="applyAdj(${ki},1)">+ Add funds</button>
+        <button class="btn btn-danger btn-sm" onclick="applyAdj(${ki},-1)">− Deduct funds</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">History & upcoming</div>
+      <div class="history-list">
+        ${upcoming.map(u => `
+          <div class="tx-item">
+            <div class="tx-dot" style="background:#B5D4F4"></div>
+            <span class="tx-desc tx-upcoming">${u.desc} <span class="upcoming-badge">upcoming</span></span>
+            <span class="tx-date">${u.date}</span>
+            <span class="tx-amt" style="color:var(--color-text-tertiary)">${u.amount > 0 ? '+$' + u.amount.toFixed(2) : '—'}</span>
+          </div>
+        `).join('')}
+        ${upcoming.length > 0 ? '<div class="separator" style="margin:4px 0"></div>' : ''}
+        ${history.length === 0 ? '<div class="empty-state" style="padding:1rem">No transactions yet</div>' : ''}
+        ${history.map(h => `
+          <div class="tx-item">
+            <div class="tx-dot" style="background:${txDot(h.type)}"></div>
+            <span class="tx-desc">${h.desc}</span>
+            <span class="tx-date">${h.date}</span>
+            <span class="tx-amt ${h.amount > 0 ? 'pos' : 'neg'}">
+              ${h.amount > 0 ? '+' : h.amount < 0 ? '' : ''}${h.amount !== 0 ? '$' + Math.abs(h.amount).toFixed(2) : '—'}
+            </span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+// ─── Add kid ──────────────────────────────────────────────────────────────────
+
+const KID_COLORS = [
+  { color: '#534AB7', bg: '#EEEDFE' },
+  { color: '#0F6E56', bg: '#E1F5EE' },
+  { color: '#993C1D', bg: '#FAECE7' },
+  { color: '#185FA5', bg: '#E6F1FB' },
+  { color: '#6B3FA0', bg: '#F2EBFC' },
+  { color: '#7B6B00', bg: '#FAFAE0' },
+];
+let addKidColorIdx = 0;
+
+async function showAddKid() {
+  addKidColorIdx = 0;
+  let categories = [];
+  try { categories = await callApi('/api/categories'); } catch {}
+
+  const categoryOptions = categories.map(c =>
+    `<option value="${c.id}">${c.name}${c.group ? ` (${c.group})` : ''}</option>`
+  ).join('');
+
+  document.getElementById('parentDetail').innerHTML = `
+    <div class="card">
+      <div class="card-title">Add a kid</div>
+      <div class="form-row">
+        <label>Name</label>
+        <input type="text" id="newKidName" placeholder="Child's name" style="flex:2" onkeydown="if(event.key==='Enter')addKid()">
+      </div>
+      <div class="form-row">
+        <label>Weekly $</label>
+        <input type="number" id="newKidAmt" value="5.00" min="0" step="0.25" style="max-width:90px">
+        <label style="min-width:auto">each</label>
+        <select id="newKidDay">
+          ${['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(d => `<option${d === 'Friday' ? ' selected' : ''}>${d}</option>`).join('')}
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Category</label>
+        <select id="newKidCategory" style="flex:2">
+          <option value="">Create new category</option>
+          ${categoryOptions}
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Color</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          ${KID_COLORS.map((c, i) => `
+            <div class="color-swatch" id="swatch${i}" onclick="selectKidColor(${i})"
+              style="background:${c.color};border:3px solid ${i === 0 ? '#000' : 'transparent'}"></div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="controls-row" style="margin-top:12px">
+        <button class="btn btn-primary btn-sm" onclick="addKid()">Add kid</button>
+        <button class="btn btn-sm" onclick="refreshKids()">Cancel</button>
+      </div>
+    </div>
+  `;
+  document.getElementById('newKidName').focus();
+}
+
+function selectKidColor(i) {
+  addKidColorIdx = i;
+  KID_COLORS.forEach((_, j) => {
+    const s = document.getElementById('swatch' + j);
+    if (s) s.style.border = j === i ? '3px solid #000' : '3px solid transparent';
+  });
+}
+
+async function addKid() {
+  const name = document.getElementById('newKidName').value.trim();
+  const weeklyAllowance = parseFloat(document.getElementById('newKidAmt').value) || 5;
+  const weeklyDay = document.getElementById('newKidDay').value;
+  const categoryId = document.getElementById('newKidCategory').value || undefined;
+  if (!name) { showToast('Enter a name'); return; }
+  const { color, bg } = KID_COLORS[addKidColorIdx] || KID_COLORS[0];
+  showToast(categoryId ? 'Adding kid…' : 'Creating category in Actual…');
+  try {
+    await callApi('/api/kids', 'POST', { name, weeklyAllowance, weeklyDay, color, bg, categoryId });
+    showToast(`${name} added!`);
+    await refreshKids();
+  } catch (err) {
+    showToast('Error: ' + err.message);
+  }
+}
+
+async function deleteKid(kidId) {
+  if (!confirm('Remove this kid from the app?\n\nNote: their Actual Budget category will remain and can be deleted there.')) return;
+  try {
+    await callApi(`/api/kids/${kidId}`, 'DELETE');
+    showToast('Kid removed');
+    state.selectedKid = 0;
+    await refreshKids();
+  } catch (err) {
+    showToast('Error: ' + err.message);
+  }
+}
+
+// ─── Allowance actions ────────────────────────────────────────────────────────
+
+async function saveAllowance(ki) {
+  const k = state.kids[ki];
+  const amt = parseFloat(document.getElementById('weeklyAmt').value) || 0;
+  const day = document.getElementById('weeklyDay').value;
+  const sourceEl = document.getElementById('allowanceSource');
+  const allowanceSourceCategoryId = sourceEl?.value || null;
+  const allowanceSourceCategoryName = allowanceSourceCategoryId ? sourceEl.options[sourceEl.selectedIndex].dataset.name : null;
+  try {
+    await callApi(`/api/kids/${k.id}/allowance`, 'PUT', { weeklyAllowance: amt, weeklyDay: day, allowanceSourceCategoryId, allowanceSourceCategoryName });
+    showToast('Allowance schedule saved');
+    await refreshKids();
+  } catch (err) { showToast('Error: ' + err.message); }
+}
+
+async function pauseAllowance(ki) {
+  try {
+    await callApi(`/api/kids/${state.kids[ki].id}/pause`, 'POST');
+    showToast('Allowance paused');
+    await refreshKids();
+  } catch (err) { showToast('Error: ' + err.message); }
+}
+
+async function resumeAllowance(ki) {
+  try {
+    await callApi(`/api/kids/${state.kids[ki].id}/resume`, 'POST');
+    showToast('Allowance resumed');
+    await refreshKids();
+  } catch (err) { showToast('Error: ' + err.message); }
+}
+
+// ─── Chore actions ────────────────────────────────────────────────────────────
+
+async function addChore(ki) {
+  const name = document.getElementById('choreName').value.trim();
+  const amt = parseFloat(document.getElementById('choreAmt').value) || 0;
+  if (!name || amt <= 0) { showToast('Enter a chore name and amount'); return; }
+  const sourceEl = document.getElementById('choreSource');
+  const sourceCategoryId = sourceEl?.value || null;
+  const sourceCategoryName = sourceCategoryId ? sourceEl.options[sourceEl.selectedIndex].dataset.name : null;
+  try {
+    await callApi(`/api/kids/${state.kids[ki].id}/chores`, 'POST', { name, amount: amt, sourceCategoryId, sourceCategoryName });
+    showToast(`"${name}" added`);
+    await refreshKids();
+  } catch (err) { showToast('Error: ' + err.message); }
+}
+
+async function removeChore(ki, choreId) {
+  try {
+    await callApi(`/api/kids/${state.kids[ki].id}/chores/${choreId}`, 'DELETE');
+    showToast('Chore removed');
+    await refreshKids();
+  } catch (err) { showToast('Error: ' + err.message); }
+}
+
+async function toggleChore(ki, choreId, checked) {
+  const k = state.kids[ki];
+  const chore = k.chores.find(c => c.id === choreId);
+  if (!chore) return;
+  try {
+    if (checked) {
+      await callApi(`/api/kids/${k.id}/chores/${choreId}/complete`, 'POST');
+      showToast(`+$${chore.amount.toFixed(2)} added for "${chore.name}"`);
+    } else {
+      await callApi(`/api/kids/${k.id}/chores/${choreId}/uncomplete`, 'POST');
+      showToast('Chore unchecked');
+    }
+    await refreshKids();
+  } catch (err) { showToast('Error: ' + err.message); }
+}
+
+// ─── Manual adjustment ────────────────────────────────────────────────────────
+
+async function applyAdj(ki, dir) {
+  const k = state.kids[ki];
+  const amt = parseFloat(document.getElementById('adjAmt').value) || 0;
+  const reason = document.getElementById('adjReason').value.trim() || 'Manual adjustment';
+  if (amt <= 0) { showToast('Enter an amount'); return; }
+  try {
+    await callApi(`/api/kids/${k.id}/adjust`, 'POST', { amount: amt, reason, direction: dir });
+    showToast(`${dir > 0 ? '+' : '−'}$${amt.toFixed(2)} ${dir > 0 ? 'added' : 'deducted'}`);
+    await refreshKids();
+  } catch (err) { showToast('Error: ' + err.message); }
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
+
+initApp();
+</script>

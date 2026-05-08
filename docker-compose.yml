@@ -1,0 +1,22 @@
+services:
+  allowance:
+    image: node:22
+    working_dir: /app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - node_modules:/app/node_modules
+      - actual_data:/app/actual-data
+    environment:
+      ACTUAL_SERVER_URL: http://your-actual-server:5006
+      ACTUAL_PASSWORD: ""
+      ACTUAL_BUDGET_ID: your-budget-sync-id-here
+      ACTUAL_FILE_PASSWORD: ""
+      PORT: "3000"
+    command: sh -c "npm install && node server.js"
+
+volumes:
+  node_modules:
+  actual_data:
