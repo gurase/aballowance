@@ -3,3 +3,4 @@ actual-data/
 .env
 *.log
 .claude/
+kids.json
